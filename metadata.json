@@ -1,0 +1,5 @@
+{
+  "name": "Akcióvadász",
+  "description": "An AI-powered application to find and compare the latest promotional offers from major Hungarian supermarket chains. Helping users save money by aggregating deals in one place.",
+  "requestFramePermissions": []
+}
