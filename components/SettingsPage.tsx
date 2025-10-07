@@ -29,7 +29,7 @@ const SettingsPage: React.FC = () => {
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <h2 className="text-2xl font-bold text-gray-800 mb-6">Beállítások</h2>
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-lg shadow-lg p-6">
         <h3 className="text-lg font-semibold text-gray-900">Értesítések</h3>
         <p className="text-sm text-gray-500 mt-1">Kezelje az alkalmazás értesítési beállításait.</p>
         <div className="mt-4 p-4 bg-gray-50 rounded-md flex items-center justify-between">

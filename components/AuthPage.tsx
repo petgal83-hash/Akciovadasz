@@ -1,158 +1,104 @@
-import React, { useState } from 'react';
+import React from 'react';
+import Logo from './Logo';
+import { auth, googleProvider } from '../services/firebase';
 
-interface AuthPageProps {
-  onLoginSuccess: () => void;
-}
+/**
+ * NOTE: This is now a real authentication page using Firebase.
+ * Google Sign-In and Anonymous sign-in are implemented.
+ * Apple Sign-In requires an Apple Developer account and additional setup.
+ */
+const AuthPage: React.FC = () => {
 
-const GoogleIcon = () => (
-    <svg className="w-5 h-5 mr-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
-        <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039L38.804 8.804C34.522 4.965 29.656 2.5 24 2.5C11.411 2.5 2.5 11.411 2.5 24s8.911 21.5 21.5 21.5S45.5 36.589 45.5 24c0-1.573-.153-3.097-.439-4.561z" />
-        <path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12.5 24 12.5c3.059 0 5.842 1.154 7.961 3.039L38.804 8.804C34.522 4.965 29.656 2.5 24 2.5C16.319 2.5 9.656 6.337 6.306 12.034z" />
-        <path fill="#4CAF50" d="M24 45.5c5.331 0 9.731-1.742 12.923-4.664l-6.6-5.238c-1.898 1.286-4.321 2.05-7.323 2.05c-5.223 0-9.655-3.417-11.282-7.94l-6.522 5.025C9.505 39.556 16.227 45.5 24 45.5z" />
-        <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-.792 2.237-2.231 4.166-4.087 5.571l6.6 5.238c3.897-3.605 6.184-8.827 6.184-14.809c0-1.573-.153-3.097-.439-4.561z" />
-    </svg>
-);
-
-const AppleIcon = () => (
-    <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M15.226 14.155c.033 1.956-1.536 2.915-1.578 2.932-.033.008-1.186.49-2.613.473-1.46-.017-2.146-.35-3.14-.35-.985 0-1.921.36-2.882.378-1.018.017-2.2-.474-3.22-1.636-1.42-1.62-1.956-3.863-1.956-3.863s.068-3.189 1.636-4.532c.813-.678 1.772-1.027 2.76-1.027.873 0 1.62.333 2.23.333.61 0 1.554-.386 2.515-.358 1.294.042 2.238.452 2.8.926-.05.033-2.18 1.27-2.135 3.59.052 2.657 2.67 3.546 2.74 3.579zM14.62 5.013c.78-.935 1.294-2.2 1.135-3.453-.96.05-2.112.636-2.882 1.578-.7.83-1.35 2.11-1.2 3.328.985.109 2.166-.518 2.947-1.453z" />
-    </svg>
-);
-
-const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess }) => {
-  const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
-
-  const handleAuth = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-
-    if (isLogin) {
-      // Login logic
-      try {
-        const storedUser = localStorage.getItem('akciovadasz_user');
-        if (!storedUser) {
-          setError('Nincs ilyen felhasználó regisztrálva.');
-          return;
-        }
-        const user = JSON.parse(storedUser);
-        if (user.email === email && user.password === password) {
-          onLoginSuccess();
-        } else {
-          setError('Hibás email cím vagy jelszó.');
-        }
-      } catch {
-        setError('Hiba a bejelentkezés során.');
-      }
-    } else {
-      // Registration logic
-      if (password !== confirmPassword) {
-        setError('A jelszavak nem egyeznek.');
-        return;
-      }
-      if (password.length < 6) {
-        setError('A jelszónak legalább 6 karakter hosszúnak kell lennie.');
-        return;
-      }
-      // Simple validation
-      if (!email || !password) {
-        setError('Minden mező kitöltése kötelező.');
-        return;
-      }
-      
-      localStorage.setItem('akciovadasz_user', JSON.stringify({ email, password }));
-      onLoginSuccess();
+  const handleGoogleSignIn = async () => {
+    try {
+      // Use signInWithPopup. In some sandboxed environments, this can work
+      // better than redirect. The onAuthStateChanged listener in Main.tsx
+      // will handle the user session upon successful sign-in.
+      await auth.signInWithPopup(googleProvider);
+    } catch (error) {
+      console.error("Error during Google sign-in:", error);
+      alert("Hiba történt a Google bejelentkezés során. Kérjük, próbálja újra.");
     }
+  };
+  
+  const handleAnonymousSignIn = async () => {
+    try {
+      await auth.signInAnonymously();
+      // onAuthStateChanged in Main.tsx will handle the state change.
+    } catch (error) {
+      console.error("Error during anonymous sign-in:", error);
+      alert("Hiba történt a bejelentkezés során. Kérjük, próbálja újra.");
+    }
+  };
+  
+  const handleAppleSignIn = () => {
+      // Apple Sign-In requires an Apple Developer account and specific server-side setup.
+      // This is a placeholder to inform the user.
+      alert("Az Apple bejelentkezés jelenleg nem elérhető. Kérjük, használja a Google vagy az email opciót.");
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center items-center p-4">
-      <div className="max-w-md w-full mx-auto">
-        <div className="text-center mb-8">
-            <h1 className="text-4xl font-extrabold text-primary-red">Akcióvadász</h1>
-            <p className="text-gray-600 mt-2">A legjobb akciók egy helyen.</p>
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-between p-4 relative overflow-hidden">
+        <div className="absolute bottom-0 left-0 right-0 h-2/3 bg-primary-teal rounded-t-[100%] -translate-y-1/4" style={{ top: '50%'}}></div>
+        <div className="absolute bottom-0 left-0 right-0 h-2/3 bg-primary-teal opacity-50 rounded-t-[100%] -translate-y-1/4" style={{ top: '55%'}}></div>
+      
+      <div className="relative z-10 text-center pt-16">
+        <div className="inline-block drop-shadow-lg">
+          <Logo textClassName="text-gray-800" />
+          <p className="text-gray-600 mt-1">A legjobb ajánlatok egy helyen.</p>
         </div>
-        <div className="bg-white p-8 rounded-2xl shadow-lg w-full">
-            <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">{isLogin ? 'Bejelentkezés' : 'Regisztráció'}</h2>
-            <form onSubmit={handleAuth} className="space-y-6">
-              <div>
-                <label htmlFor="email" className="text-sm font-medium text-gray-700 block mb-2">Email cím</label>
-                <input
-                  type="email"
-                  id="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-red focus:border-primary-red"
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="password"  className="text-sm font-medium text-gray-700 block mb-2">Jelszó</label>
-                <input
-                  type="password"
-                  id="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-red focus:border-primary-red"
-                  required
-                />
-              </div>
-              {!isLogin && (
-                <div>
-                  <label htmlFor="confirmPassword"  className="text-sm font-medium text-gray-700 block mb-2">Jelszó megerősítése</label>
-                  <input
-                    type="password"
-                    id="confirmPassword"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-red focus:border-primary-red"
-                    required
-                  />
-                </div>
-              )}
-              {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-              <button
-                type="submit"
-                className="w-full bg-primary-red text-white py-3 rounded-lg font-semibold hover:bg-red-700 transition-colors duration-300"
-              >
-                {isLogin ? 'Bejelentkezés' : 'Regisztráció'}
-              </button>
-            </form>
+      </div>
+
+      <div className="relative z-10 max-w-md w-full mx-auto pb-8">
+        <div className="bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-lg w-full text-center">
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Üdvözöljük!</h2>
+            <p className="text-gray-600 mb-8">Jelentkezzen be, hogy elérje a személyre szabott ajánlatokat.</p>
             
-            <div className="my-6 flex items-center">
-                <div className="flex-grow border-t border-gray-300"></div>
-                <span className="flex-shrink mx-4 text-gray-500 text-sm">vagy</span>
-                <div className="flex-grow border-t border-gray-300"></div>
-            </div>
-
             <div className="space-y-4">
-                <button
-                    type="button"
-                    onClick={onLoginSuccess}
-                    className="w-full flex items-center justify-center py-2.5 px-4 border border-gray-300 rounded-lg font-semibold text-gray-700 bg-white hover:bg-gray-50 transition-colors"
-                >
-                    <GoogleIcon />
-                    Bejelentkezés Google-fiókkal
-                </button>
-                <button
-                    type="button"
-                    onClick={onLoginSuccess}
-                    className="w-full flex items-center justify-center py-2.5 px-4 border border-transparent rounded-lg font-semibold text-white bg-black hover:bg-gray-800 transition-colors"
-                >
-                    <AppleIcon />
-                    Bejelentkezés Apple-fiókkal
-                </button>
-            </div>
-
-            <p className="text-center text-sm text-gray-600 mt-6">
-              {isLogin ? 'Nincs még fiókod?' : 'Már van fiókod?'}
-              <button onClick={() => { setIsLogin(!isLogin); setError(''); }} className="font-semibold text-primary-red hover:underline ml-1">
-                {isLogin ? 'Regisztrálj' : 'Jelentkezz be'}
+              <button
+                type="button"
+                onClick={handleAnonymousSignIn}
+                className="w-full bg-primary-teal text-white py-3 px-6 rounded-full font-semibold hover:bg-teal-700 transition-transform hover:scale-105 duration-300 shadow-lg"
+              >
+                Folytatás emaillel
               </button>
-            </p>
+
+              <div className="relative flex py-2 items-center">
+                <div className="flex-grow border-t border-gray-300"></div>
+                <span className="flex-shrink mx-4 text-gray-500 text-sm">Vagy</span>
+                <div className="flex-grow border-t border-gray-300"></div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-4">
+                {/* Google Sign-in Button */}
+                <button
+                  type="button"
+                  onClick={handleGoogleSignIn}
+                  className="w-full bg-white text-gray-700 py-3 px-4 rounded-full font-semibold hover:bg-gray-100 transition-transform hover:scale-105 duration-300 shadow-md border border-gray-200 flex items-center justify-center"
+                >
+                  <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
+                      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+                      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                      <path d="M1 1h22v22H1z" fill="none"/>
+                  </svg>
+                  <span>Google</span>
+                </button>
+                
+                {/* Apple Sign-in Button */}
+                <button
+                  type="button"
+                  onClick={handleAppleSignIn}
+                  className="w-full bg-black text-white py-3 px-4 rounded-full font-semibold hover:bg-gray-800 transition-transform hover:scale-105 duration-300 shadow-md flex items-center justify-center"
+                >
+                  <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M17.47,12.82c-1.38,1.4-2.8,2.94-3.48,2.94c-0.62,0-1.09-0.54-2.22-0.54c-1.2,0-2.3,0.59-3,1.35 c-1.2,1.26-2.16,3.42-2.16,5.32c0,0.1,0,0.21,0,0.31c0.82,0.1,1.54-0.15,2.35-0.62c0.75-0.45,1.53-1.23,2.27-1.23 c0.72,0,1.39,0.72,2.67,0.72c1.23,0,1.81-0.78,2.9-0.78c0.69,0,1.32,0.36,1.92,0.78c0.65,0.45,1.41,0.84,2.25,0.72 c-0.03-2.4-1.04-4.56-2.39-5.95C19.98,14.73,18.82,14.19,17.47,12.82z M12.56,3.31c-0.89-1.11-2.25-1.83-3.63-1.83 c-2.1,0-3.87,1.5-4.92,3.75c-1.77,3.78,0.21,8.04,3.24,10.38c1.17,0.9,2.46,1.44,3.87,1.38c0.15,0,0.29-0.02,0.44-0.02 c1.2,0,2.37-0.48,3.33-1.35c0.84-0.75,1.42-1.74,1.71-2.82c-2.4-1.38-4.02-3.87-3.81-6.78C13.04,6.2,13.56,4.52,12.56,3.31z"/>
+                  </svg>
+                  <span>Apple</span>
+                </button>
+              </div>
+            </div>
         </div>
       </div>
     </div>

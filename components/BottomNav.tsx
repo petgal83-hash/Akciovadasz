@@ -7,10 +7,9 @@ interface BottomNavProps {
     setActiveView: (view: AppView) => void;
 }
 
-const NavItem = ({ Icon, label, isActive, onClick }) => (
-    <button onClick={onClick} className={`flex flex-col items-center justify-center w-full pt-2 pb-1 transition-colors duration-200 ${isActive ? 'text-primary-red' : 'text-gray-500 hover:text-gray-700'}`}>
-        <Icon className="h-6 w-6 mb-1" />
-        <span className="text-xs font-medium">{label}</span>
+const NavItem = ({ Icon, isActive, onClick }) => (
+    <button onClick={onClick} className={`flex items-center justify-center w-full pt-2 pb-1 transition-colors duration-200 ${isActive ? 'text-primary-teal' : 'text-gray-500 hover:text-gray-700'}`}>
+        <Icon className="h-7 w-7" />
     </button>
 );
 
@@ -26,24 +25,6 @@ const BottomNav: React.FC<BottomNavProps> = ({ activeView, setActiveView }) => {
             )
         },
         {
-            id: 'comparison',
-            label: 'Összehasonlítás',
-            icon: ({ className }) => (
-                <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                </svg>
-            )
-        },
-        {
-            id: 'favorites',
-            label: 'Kedvencek',
-            icon: ({ className }) => (
-                <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.636l1.318-1.318a4.5 4.5 0 016.364 6.364L12 20.364l-7.682-7.682a4.5 4.5 0 010-6.364z" />
-                </svg>
-            )
-        },
-        {
             id: 'ai-search',
             label: 'AI Keresés',
             icon: ({ className }) => (
@@ -53,24 +34,40 @@ const BottomNav: React.FC<BottomNavProps> = ({ activeView, setActiveView }) => {
             )
         },
         {
-            id: 'settings',
-            label: 'Beállítások',
+            id: 'favorites',
+            label: 'Kedvencek',
+            icon: ({ className }) => (
+                <svg xmlns="http://www.w3.org/2000/svg" className={className} fill={activeView === 'favorites' ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.636l1.318-1.318a4.5 4.5 0 016.364 6.364L12 20.364l-7.682-7.682a4.5 4.5 0 010-6.364z" />
+                </svg>
+            )
+        },
+        {
+            id: 'comparison',
+            label: 'Összehasonlítás',
             icon: ({ className }) => (
                 <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066 2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                </svg>
+            )
+        },
+        {
+            id: 'settings',
+            label: 'Profil',
+            icon: ({ className }) => (
+                <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
             )
         }
     ];
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 h-16 bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.05)] flex md:hidden z-30 border-t border-gray-200">
+        <div className="fixed bottom-0 left-0 right-0 h-16 bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.05)] flex justify-around md:hidden z-30 border-t border-gray-200">
             {navItems.map(item => (
                 <NavItem 
                     key={item.id}
                     Icon={item.icon}
-                    label={item.label}
                     isActive={activeView === item.id}
                     onClick={() => setActiveView(item.id as AppView)}
                 />

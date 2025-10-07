@@ -1,0 +1,16 @@
+{
+  "short_name": "Akcióvadász",
+  "name": "Akcióvadász - A legjobb akciók",
+  "icons": [
+    {
+      "src": "logo-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#2A9D8F",
+  "background_color": "#F1FAEE"
+}

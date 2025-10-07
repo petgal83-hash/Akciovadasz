@@ -1,28 +1,36 @@
+
+
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import Header from './components/Header';
 import FilterSidebar from './components/FilterSidebar';
 import ProductCard from './components/ProductCard';
+import ProductListItem from './components/ProductListItem';
 import SkeletonLoader from './components/SkeletonLoader';
 import BottomNav from './components/BottomNav';
 import ComparisonPage from './components/ComparisonPage';
 import SettingsPage from './components/SettingsPage';
 import NotificationPermissionModal from './components/NotificationPermissionModal';
+import AdBanner from './components/AdBanner';
+import AISearchPage from './components/AISearchPage';
 import { fetchDeals } from './services/geminiService';
-import { Product, Store } from './types';
+import { Product, Store, ProductOrAd } from './types';
 import { useNotifications } from './hooks/useNotifications';
+import { FirebaseUser } from './services/firebase';
 
 
 type AppView = 'home' | 'comparison' | 'favorites' | 'ai-search' | 'settings';
+type ViewMode = 'grid' | 'list';
 
 interface AppProps {
     onLogout: () => void;
+    user: FirebaseUser;
 }
 
-// New FilterModal component
+// New FilterModal component for mobile
 const FilterModal: React.FC<{ isOpen: boolean; onClose: () => void; children: React.ReactNode }> = ({ isOpen, onClose, children }) => {
     if (!isOpen) return null;
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-40 flex justify-center items-center" onClick={onClose}>
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-40 flex justify-center items-center lg:hidden" onClick={onClose}>
             <div className="bg-white rounded-lg shadow-xl m-4 w-full max-w-md max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
                 {children}
             </div>
@@ -31,15 +39,13 @@ const FilterModal: React.FC<{ isOpen: boolean; onClose: () => void; children: Re
 };
 
 
-const App: React.FC<AppProps> = ({ onLogout }) => {
+const App: React.FC<AppProps> = ({ onLogout, user }) => {
     const [allProducts, setAllProducts] = useState<Product[]>([]);
     const previousProductsRef = useRef<Product[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     
     const [view, setView] = useState<AppView>('home');
-    const [searchTerm, setSearchTerm] = useState<string>('');
-    const [submittedSearchTerm, setSubmittedSearchTerm] = useState<string>('');
     
     const [selectedStores, setSelectedStores] = useState<Store[]>([]);
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -47,6 +53,7 @@ const App: React.FC<AppProps> = ({ onLogout }) => {
     const [minDiscount, setMinDiscount] = useState<number>(0);
     const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
     const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
+    const [viewMode, setViewMode] = useState<ViewMode>('grid');
 
     const { permission, requestPermission, sendNotification } = useNotifications();
 
@@ -102,10 +109,10 @@ const App: React.FC<AppProps> = ({ onLogout }) => {
         localStorage.setItem('akciovadasz_comparison', JSON.stringify(comparisonList));
     }, [comparisonList]);
 
-    const loadDeals = useCallback(async (searchQuery?: string) => {
+    const loadDeals = useCallback(async () => {
         try {
             setIsLoading(true);
-            const products = await fetchDeals(searchQuery, location ?? undefined);
+            const products = await fetchDeals(undefined, location ?? undefined);
 
             if (permission === 'granted' && previousProductsRef.current.length > 0) {
                 const currentFavorites = JSON.parse(localStorage.getItem('akciovadasz_favorites') || '[]');
@@ -165,13 +172,6 @@ const App: React.FC<AppProps> = ({ onLogout }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [loadDeals]);
 
-    // Effect for handling search submission
-    useEffect(() => {
-        if (submittedSearchTerm) {
-            loadDeals(submittedSearchTerm);
-        }
-    }, [submittedSearchTerm, loadDeals]);
-
      // Effect for auto-refresh
     useEffect(() => {
         const autoRefresh = () => {
@@ -190,32 +190,22 @@ const App: React.FC<AppProps> = ({ onLogout }) => {
             const canAutoRefresh = dailyFetchCount < 3;
 
             if (isStale && canAutoRefresh) {
-                loadDeals(submittedSearchTerm);
+                loadDeals();
                 localStorage.setItem('akciovadasz_lastFetch', JSON.stringify({ time: now, count: dailyFetchCount + 1 }));
             }
         };
 
         const intervalId = setInterval(autoRefresh, 60 * 60 * 1000); // Check every hour
         return () => clearInterval(intervalId);
-    }, [loadDeals, submittedSearchTerm]);
+    }, [loadDeals]);
 
 
     useEffect(() => {
         localStorage.setItem('akciovadasz_favorites', JSON.stringify(favorites));
     }, [favorites]);
 
-    const handleSearchSubmit = () => {
-        setSubmittedSearchTerm(searchTerm);
-    };
-    
-    const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-        if (event.key === 'Enter') {
-          handleSearchSubmit();
-        }
-    };
-
     const handleRefresh = () => {
-        loadDeals(submittedSearchTerm);
+        loadDeals();
     };
 
     const handleToggleFavorite = useCallback((id: string) => {
@@ -278,28 +268,10 @@ const App: React.FC<AppProps> = ({ onLogout }) => {
     const favoriteProducts = useMemo(() => allProducts.filter(p => favorites.includes(p.id)), [allProducts, favorites]);
     const comparisonProducts = useMemo(() => allProducts.filter(p => comparisonList.includes(p.id)), [allProducts, comparisonList]);
     
-    const SearchAndFilterBar = () => (
+    const FilterControls = () => (
         <div className="px-4 sm:px-0 my-4 space-y-3">
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                  <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-                </svg>
-            </div>
-            <input
-              id="search"
-              name="search"
-              className="block w-full pl-11 pr-3 py-3 border border-gray-200 rounded-full leading-5 bg-gray-50 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-primary-red focus:border-primary-red sm:text-sm"
-              placeholder="Keresés termékek között..."
-              type="search"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyDown={handleKeyDown}
-              autoComplete="off"
-            />
-          </div>
           <div className="flex items-center space-x-2">
-            <button onClick={() => setIsFilterModalOpen(true)} className="flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 active:bg-gray-200">
+            <button onClick={() => setIsFilterModalOpen(true)} className="lg:hidden flex items-center space-x-2 border border-gray-300 rounded-full px-4 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 active:bg-gray-200">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                 </svg>
@@ -329,21 +301,34 @@ const App: React.FC<AppProps> = ({ onLogout }) => {
             return <ComparisonPage products={comparisonProducts} onRemove={handleToggleComparison} />;
         }
 
+        if (view === 'ai-search') {
+            return <AISearchPage
+                        allProducts={allProducts}
+                        favorites={favorites}
+                        comparisonList={comparisonList}
+                        onToggleFavorite={handleToggleFavorite}
+                        onToggleComparison={handleToggleComparison}
+                    />;
+        }
+
         if (view === 'home') {
             if (isLoading && allProducts.length === 0) return <SkeletonLoader />;
             if (error) return <ErrorMessage error={error} />;
             return (
                 <div>
-                    <SearchAndFilterBar />
-                    {renderProductList(filteredProducts, submittedSearchTerm ? "Keresés eredménye" : "Akciós ajánlatok", "Nincs a szűrési feltételeknek megfelelő termék.")}
+                    <FilterControls />
+                    {renderProductList(filteredProducts, "Akciós ajánlatok", "Nincs a szűrési feltételeknek megfelelő termék.")}
                 </div>
             );
         }
 
         // Placeholder for other views
+        // Fix: Cast `view` to string. TypeScript correctly infers `view` as `never` here
+        // because all possible cases of AppView are handled above. This cast preserves
+        // the placeholder's functionality for any future additions to AppView.
         return (
             <div className="text-center p-8 bg-gray-100 text-gray-800 rounded-lg mt-4 mx-4">
-                <h3 className="font-bold text-lg capitalize">{view.replace('-', ' ')}</h3>
+                <h3 className="font-bold text-lg capitalize">{(view as string).replace('-', ' ')}</h3>
                 <p>Ez a funkció fejlesztés alatt áll.</p>
             </div>
         );
@@ -356,51 +341,110 @@ const App: React.FC<AppProps> = ({ onLogout }) => {
         </div>
     );
 
-    const renderProductList = (products: Product[], title: string, emptyMessage: string) => (
-        <div>
-            <h2 className="text-xl font-bold text-gray-800 px-4 sm:px-0 mb-4">{title} ({products.length})</h2>
-            {isLoading && products.length > 0 && <div className="text-center py-4">Frissítés...</div>}
-            {products.length === 0 && !isLoading ? (
-                <div className="text-center p-8 bg-yellow-50 text-yellow-800 rounded-lg mx-4 sm:mx-0">
-                    <h3 className="font-bold text-lg">Nincs találat</h3>
-                    <p>{emptyMessage}</p>
-                </div>
-            ) : (
-                <div className="px-4 sm:px-0">
-                    {products.map(product => (
-                        <ProductCard 
-                            key={product.id} 
-                            product={product} 
-                            isFavorite={favorites.includes(product.id)} 
-                            onToggleFavorite={handleToggleFavorite}
-                            isCompared={comparisonList.includes(product.id)}
-                            onToggleComparison={handleToggleComparison}
-                        />
-                    ))}
-                </div>
-            )}
-        </div>
-    );
+    const renderProductList = (products: Product[], title: string, emptyMessage: string) => {
+        const itemsWithAds: ProductOrAd[] = [];
+        products.forEach((product, index) => {
+            itemsWithAds.push(product);
+            // Insert an ad after the 5th item, and then every 6 items after that
+            if ((index + 1) % 6 === 5) {
+                itemsWithAds.push({ isAd: true, id: `ad-${index}` });
+            }
+        });
 
+        return (
+            <div>
+                <div className="flex justify-between items-center px-4 sm:px-0 mb-4">
+                    <h2 className="text-xl font-bold text-gray-800">{title} ({products.length})</h2>
+                     <div className="flex items-center space-x-1 border border-gray-200 rounded-full p-0.5 bg-gray-100">
+                        <button 
+                            onClick={() => setViewMode('grid')} 
+                            className={`p-1.5 rounded-full transition-colors duration-200 ${viewMode === 'grid' ? 'bg-primary-teal text-white shadow-sm' : 'text-gray-500 hover:bg-gray-200'}`}
+                            aria-label="Grid nézet"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                               <path d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                            </svg>
+                        </button>
+                        <button 
+                            onClick={() => setViewMode('list')} 
+                            className={`p-1.5 rounded-full transition-colors duration-200 ${viewMode === 'list' ? 'bg-primary-teal text-white shadow-sm' : 'text-gray-500 hover:bg-gray-200'}`}
+                            aria-label="Lista nézet"
+                        >
+                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h7" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                {isLoading && products.length > 0 && <div className="text-center py-4">Frissítés...</div>}
+                {products.length === 0 && !isLoading ? (
+                    <div className="text-center p-8 bg-yellow-50 text-yellow-800 rounded-lg mx-4 sm:mx-0">
+                        <h3 className="font-bold text-lg">Nincs találat</h3>
+                        <p>{emptyMessage}</p>
+                    </div>
+                ) : (
+                    viewMode === 'grid' ? (
+                         <div className="px-4 sm:px-0">
+                            {itemsWithAds.map(item =>
+                                'isAd' in item ? <AdBanner key={item.id} /> : (
+                                    <ProductCard 
+                                        key={item.id} 
+                                        product={item} 
+                                        isFavorite={favorites.includes(item.id)} 
+                                        onToggleFavorite={handleToggleFavorite}
+                                        isCompared={comparisonList.includes(item.id)}
+                                        onToggleComparison={handleToggleComparison}
+                                    />
+                                )
+                            )}
+                        </div>
+                    ) : (
+                        <div className="px-4 sm:px-0 space-y-3">
+                             {itemsWithAds.map(item =>
+                                'isAd' in item ? <AdBanner key={item.id} /> : (
+                                    <ProductListItem 
+                                        key={item.id} 
+                                        product={item} 
+                                        isFavorite={favorites.includes(item.id)} 
+                                        onToggleFavorite={handleToggleFavorite}
+                                        isCompared={comparisonList.includes(item.id)}
+                                        onToggleComparison={handleToggleComparison}
+                                    />
+                                )
+                            )}
+                        </div>
+                    )
+                )}
+            </div>
+        );
+    };
+
+    const filterSidebarProps = {
+      selectedStores,
+      onStoreToggle: handleStoreToggle,
+      selectedCategories,
+      onCategoryToggle: handleCategoryToggle,
+      allCategories,
+      priceRange,
+      onPriceChange: setPriceRange,
+      minDiscount,
+      onDiscountChange: setMinDiscount,
+      onResetFilters: resetFilters,
+    };
+    
     return (
-        <div className="min-h-screen bg-white pb-24">
-            <Header onLogout={onLogout} />
-            <main className="container mx-auto">
-                {renderContent()}
-            </main>
+        <div className="min-h-screen bg-gray-50 pb-24 lg:pb-0">
+            <Header onLogout={onLogout} user={user} />
+            <div className="container mx-auto flex flex-col lg:flex-row lg:gap-8">
+                <aside className="hidden lg:block lg:w-64 xl:w-72 lg:flex-shrink-0">
+                    <FilterSidebar {...filterSidebarProps} />
+                </aside>
+                <main className="flex-1">
+                    {renderContent()}
+                </main>
+            </div>
             <FilterModal isOpen={isFilterModalOpen} onClose={() => setIsFilterModalOpen(false)}>
-                <FilterSidebar
-                    selectedStores={selectedStores}
-                    onStoreToggle={handleStoreToggle}
-                    selectedCategories={selectedCategories}
-                    onCategoryToggle={handleCategoryToggle}
-                    allCategories={allCategories}
-                    priceRange={priceRange}
-                    onPriceChange={setPriceRange}
-                    minDiscount={minDiscount}
-                    onDiscountChange={setMinDiscount}
-                    onResetFilters={resetFilters}
-                />
+                <FilterSidebar {...filterSidebarProps} />
             </FilterModal>
             <NotificationPermissionModal
                 isOpen={isNotificationModalOpen}

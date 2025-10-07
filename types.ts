@@ -1,3 +1,4 @@
+
 export enum Store {
   TESCO = "Tesco",
   AUCHAN = "Auchan",
@@ -19,3 +20,10 @@ export interface Product {
   imageUrl: string;
   unit: string; // e.g., 'kg', 'l', 'db'
 }
+
+export interface AdPlaceholder {
+  id: string;
+  isAd: true;
+}
+
+export type ProductOrAd = Product | AdPlaceholder;

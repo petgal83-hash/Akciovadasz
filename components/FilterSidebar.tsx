@@ -41,7 +41,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                 type="checkbox"
                 checked={selectedStores.includes(name)}
                 onChange={() => onStoreToggle(name)}
-                className="h-4 w-4 rounded border-gray-300 text-[#2A9D8F] focus:ring-[#2A9D8F]"
+                className="h-4 w-4 rounded border-gray-300 text-primary-teal focus:ring-primary-teal"
               />
               <span className="ml-3 text-sm text-gray-600">{name}</span>
             </label>
@@ -59,7 +59,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                 type="checkbox"
                 checked={selectedCategories.includes(category)}
                 onChange={() => onCategoryToggle(category)}
-                className="h-4 w-4 rounded border-gray-300 text-[#2A9D8F] focus:ring-[#2A9D8F]"
+                className="h-4 w-4 rounded border-gray-300 text-primary-teal focus:ring-primary-teal"
               />
               <span className="ml-3 text-sm text-gray-600">{category}</span>
             </label>
@@ -75,7 +75,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
             type="number"
             value={priceRange.min}
             onChange={(e) => onPriceChange({ ...priceRange, min: Number(e.target.value) || 0 })}
-            className="w-full border-gray-300 rounded-md shadow-sm focus:border-[#2A9D8F] focus:ring-[#2A9D8F] sm:text-sm"
+            className="w-full border-gray-300 rounded-md shadow-sm focus:border-primary-teal focus:ring-primary-teal sm:text-sm"
             placeholder="Min"
           />
           <span>-</span>
@@ -83,7 +83,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
             type="number"
             value={priceRange.max}
             onChange={(e) => onPriceChange({ ...priceRange, max: Number(e.target.value) || 100000 })}
-            className="w-full border-gray-300 rounded-md shadow-sm focus:border-[#2A9D8F] focus:ring-[#2A9D8F] sm:text-sm"
+            className="w-full border-gray-300 rounded-md shadow-sm focus:border-primary-teal focus:ring-primary-teal sm:text-sm"
             placeholder="Max"
           />
         </div>
@@ -99,14 +99,14 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
           step="5"
           value={minDiscount}
           onChange={(e) => onDiscountChange(Number(e.target.value))}
-          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#2A9D8F]"
+          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary-teal"
         />
-        <div className="text-center mt-2 font-medium text-[#2A9D8F]">{minDiscount}%</div>
+        <div className="text-center mt-2 font-medium text-primary-teal">{minDiscount}%</div>
       </div>
       
       <button
         onClick={onResetFilters}
-        className="w-full py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2A9D8F]"
+        className="w-full py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-teal"
       >
         Szűrők törlése
       </button>

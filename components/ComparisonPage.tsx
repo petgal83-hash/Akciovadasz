@@ -30,7 +30,7 @@ const ComparisonPage: React.FC<ComparisonPageProps> = ({ products, onRemove }) =
                 
                 <div className="my-2">
                     <span className="text-gray-500 line-through mr-2">{product.originalPrice.toLocaleString('hu-HU')} Ft</span>
-                    <span className="text-2xl font-extrabold text-primary-red">{product.salePrice.toLocaleString('hu-HU')} Ft</span>
+                    <span className="text-2xl font-extrabold text-primary-teal">{product.salePrice.toLocaleString('hu-HU')} Ft</span>
                 </div>
                 <p className="text-lg font-semibold text-gray-700 mb-2">{product.unit}</p>
 
