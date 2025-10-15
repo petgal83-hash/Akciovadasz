@@ -7,7 +7,15 @@ interface BottomNavProps {
     setActiveView: (view: AppView) => void;
 }
 
-const NavItem = ({ Icon, isActive, onClick }) => (
+// FIX: Changed NavItem to be explicitly typed as a React.FC. This allows TypeScript to
+// correctly handle React-specific props like `key` and resolves the type error.
+interface NavItemProps {
+    Icon: React.ElementType;
+    isActive: boolean;
+    onClick: () => void;
+}
+
+const NavItem: React.FC<NavItemProps> = ({ Icon, isActive, onClick }) => (
     <button onClick={onClick} className={`flex items-center justify-center w-full pt-2 pb-1 transition-colors duration-200 ${isActive ? 'text-primary-teal' : 'text-gray-500 hover:text-gray-700'}`}>
         <Icon className="h-7 w-7" />
     </button>
@@ -18,7 +26,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ activeView, setActiveView }) => {
         {
             id: 'home',
             label: 'Akciók',
-            icon: ({ className }) => (
+            icon: ({ className }: { className: string }) => (
                 <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                 </svg>
@@ -27,7 +35,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ activeView, setActiveView }) => {
         {
             id: 'ai-search',
             label: 'AI Keresés',
-            icon: ({ className }) => (
+            icon: ({ className }: { className: string }) => (
                 <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.898 20.562L16.25 22.5l-.648-1.938a3.375 3.375 0 00-2.672-2.672L11.25 18l1.938-.648a3.375 3.375 0 002.672-2.672L16.25 13l.648 1.938a3.375 3.375 0 002.672 2.672L21.75 18l-1.938.648a3.375 3.375 0 00-2.672 2.672z" />
                 </svg>
@@ -36,7 +44,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ activeView, setActiveView }) => {
         {
             id: 'favorites',
             label: 'Kedvencek',
-            icon: ({ className }) => (
+            icon: ({ className }: { className: string }) => (
                 <svg xmlns="http://www.w3.org/2000/svg" className={className} fill={activeView === 'favorites' ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.636l1.318-1.318a4.5 4.5 0 016.364 6.364L12 20.364l-7.682-7.682a4.5 4.5 0 010-6.364z" />
                 </svg>
@@ -45,7 +53,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ activeView, setActiveView }) => {
         {
             id: 'comparison',
             label: 'Összehasonlítás',
-            icon: ({ className }) => (
+            icon: ({ className }: { className: string }) => (
                 <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                 </svg>
@@ -54,7 +62,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ activeView, setActiveView }) => {
         {
             id: 'settings',
             label: 'Profil',
-            icon: ({ className }) => (
+            icon: ({ className }: { className: string }) => (
                 <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>

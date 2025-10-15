@@ -3,26 +3,55 @@
 declare const firebase: any;
 
 /**
- * IMPORTANT: Replace the placeholder values below with your own Firebase project's configuration.
- * You can get this from the Firebase console:
- * Project settings > General > Your apps > Web app > Firebase SDK snippet > Config
+ * --- Firebase Configuration ---
+ * The configuration below is intentionally left with empty strings.
+ * The application is designed to gracefully fall back to a mock authentication 
+ * flow when Firebase is not configured. This allows the core features of the app
+ * to be used without a Firebase backend.
+ *
+ * For a full production deployment with user authentication (Google, etc.), 
+ * you MUST replace these with your actual Firebase project's web configuration.
  */
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY_HERE",
-  authDomain: "YOUR_AUTH_DOMAIN_HERE",
-  projectId: "YOUR_PROJECT_ID_HERE",
-  storageBucket: "YOUR_STORAGE_BUCKET_HERE",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID_HERE",
-  appId: "YOUR_APP_ID_HERE"
+  apiKey: "AIzaSyAIa3Wq4-IRcql1FfTHikaWs2hCF7GCnWA",
+  authDomain: "",
+  projectId: "",
+  storageBucket: "",
+  messagingSenderId: "",
+  appId: ""
 };
 
-// Initialize Firebase only if it hasn't been initialized yet
-if (!firebase.apps.length) {
+// A flag to check if Firebase is properly configured.
+export const isFirebaseConfigured = !!firebaseConfig.apiKey;
+
+let auth: any;
+let storage: any;
+let googleProvider: any;
+
+// Initialize Firebase only if an API key is provided.
+// This prevents the "invalid API key" error.
+if (isFirebaseConfigured && !firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
+  auth = firebase.auth();
+  storage = firebase.storage();
+  googleProvider = new firebase.auth.GoogleAuthProvider();
+} else {
+  // If Firebase is not configured, create mock objects to prevent runtime errors.
+  // The app's logic is designed to fall back to a guest mode.
+  if (!isFirebaseConfigured) {
+    console.warn("Firebase is not configured. Using mock authentication.");
+  }
+  auth = {
+    setPersistence: () => Promise.resolve(),
+    onAuthStateChanged: () => () => {}, // Returns a dummy unsubscribe function
+    signOut: () => Promise.resolve(),
+  };
+  storage = {};
+  googleProvider = {};
 }
 
-export const auth = firebase.auth();
-export const googleProvider = new firebase.auth.GoogleAuthProvider();
+export { auth, storage, googleProvider };
+
 
 // Define a type for the Firebase user object for better type safety
 // Fix: Replaced `firebase.User` with a custom interface to resolve the "Cannot find namespace 'firebase'" error.

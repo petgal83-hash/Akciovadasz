@@ -1,40 +1,30 @@
 import React from 'react';
 import Logo from './Logo';
-import { auth, googleProvider } from '../services/firebase';
 
 /**
- * NOTE: This is now a real authentication page using Firebase.
- * Google Sign-In and Anonymous sign-in are implemented.
- * Apple Sign-In requires an Apple Developer account and additional setup.
+ * NOTE: This is an authentication page. Anonymous sign-in is mocked to bypass
+ * Firebase dependency, while Google and Apple sign-in remain placeholders.
  */
-const AuthPage: React.FC = () => {
+interface AuthPageProps {
+  onMockGuestSignIn: () => void;
+}
+ 
+const AuthPage: React.FC<AuthPageProps> = ({ onMockGuestSignIn }) => {
 
-  const handleGoogleSignIn = async () => {
-    try {
-      // Use signInWithPopup. In some sandboxed environments, this can work
-      // better than redirect. The onAuthStateChanged listener in Main.tsx
-      // will handle the user session upon successful sign-in.
-      await auth.signInWithPopup(googleProvider);
-    } catch (error) {
-      console.error("Error during Google sign-in:", error);
-      alert("Hiba történt a Google bejelentkezés során. Kérjük, próbálja újra.");
-    }
+  const handleGoogleSignIn = () => {
+    // Mocked Google Sign-In for now.
+    alert("A Google bejelentkezés jelenleg nem elérhető. Kérjük, használja a 'Folytatás vendégként' opciót.");
   };
   
-  const handleAnonymousSignIn = async () => {
-    try {
-      await auth.signInAnonymously();
-      // onAuthStateChanged in Main.tsx will handle the state change.
-    } catch (error) {
-      console.error("Error during anonymous sign-in:", error);
-      alert("Hiba történt a bejelentkezés során. Kérjük, próbálja újra.");
-    }
+  const handleAnonymousSignIn = () => {
+    // This is now mocked and doesn't call Firebase, avoiding the API key error.
+    onMockGuestSignIn();
   };
   
   const handleAppleSignIn = () => {
       // Apple Sign-In requires an Apple Developer account and specific server-side setup.
       // This is a placeholder to inform the user.
-      alert("Az Apple bejelentkezés jelenleg nem elérhető. Kérjük, használja a Google vagy az email opciót.");
+      alert("Az Apple bejelentkezés jelenleg nem elérhető. Kérjük, használja a 'Folytatás vendégként' opciót.");
   };
 
   return (
@@ -60,7 +50,7 @@ const AuthPage: React.FC = () => {
                 onClick={handleAnonymousSignIn}
                 className="w-full bg-primary-teal text-white py-3 px-6 rounded-full font-semibold hover:bg-teal-700 transition-transform hover:scale-105 duration-300 shadow-lg"
               >
-                Folytatás emaillel
+                Folytatás vendégként
               </button>
 
               <div className="relative flex py-2 items-center">

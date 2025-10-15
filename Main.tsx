@@ -1,29 +1,68 @@
 import React, { useState, useEffect } from 'react';
 import App from './App';
 import AuthPage from './components/AuthPage';
-import { auth, FirebaseUser } from './services/firebase';
+import { auth, FirebaseUser, isFirebaseConfigured } from './services/firebase';
+
+// Since Firebase is loaded via a script tag, we declare it here to access its namespaces.
+declare const firebase: any;
 
 const Main: React.FC = () => {
     const [user, setUser] = useState<FirebaseUser | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        // Firebase's onAuthStateChanged listener is the single source of truth for the
-        // user's authentication state. It will be triggered immediately on page load
-        // if the user was already signed in, or after a successful sign-in flow
-        // like signInWithPopup.
-        const unsubscribe = auth.onAuthStateChanged((firebaseUser: FirebaseUser | null) => {
-            setUser(firebaseUser);
-            setIsLoading(false);
-        });
+        let unsubscribe: () => void;
+
+        const setupAuthListener = async () => {
+            // Only set up the real Firebase listener if it's configured.
+            if (isFirebaseConfigured) {
+                try {
+                    await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+                    unsubscribe = auth.onAuthStateChanged((firebaseUser: FirebaseUser | null) => {
+                        if (firebaseUser) {
+                            setUser(firebaseUser);
+                        }
+                        setIsLoading(false);
+                    });
+                } catch (error) {
+                    console.error("Firebase auth listener setup failed:", error);
+                    setIsLoading(false);
+                }
+            } else {
+                // If not configured, just stop loading and proceed to guest mode.
+                setIsLoading(false);
+            }
+        };
+
+        setupAuthListener();
 
         // Cleanup subscription on unmount to prevent memory leaks.
-        return () => unsubscribe();
+        return () => {
+            if (unsubscribe) {
+                unsubscribe();
+            }
+        };
     }, []);
 
+    const handleMockGuestSignIn = () => {
+        const guestUser: FirebaseUser = {
+            uid: `guest_${Date.now()}`,
+            displayName: 'Vendég Felhasználó',
+            email: null,
+            photoURL: `https://avatar.vercel.sh/guest.png`,
+            isAnonymous: true,
+            emailVerified: false,
+        };
+        setUser(guestUser);
+    };
+
     const handleLogout = () => {
-        auth.signOut();
-        // The onAuthStateChanged listener will automatically update the state to null.
+        // Sign out if Firebase is configured, otherwise just clear local state.
+        if (isFirebaseConfigured) {
+            auth.signOut().then(() => setUser(null)).catch(() => setUser(null));
+        } else {
+            setUser(null);
+        }
     };
     
     // Display a loading spinner while checking for an active session.
@@ -40,8 +79,8 @@ const Main: React.FC = () => {
         return <App onLogout={handleLogout} user={user} />;
     }
 
-    // Otherwise, show the authentication page.
-    return <AuthPage />;
+    // Otherwise, show the authentication page with the mock sign-in handler.
+    return <AuthPage onMockGuestSignIn={handleMockGuestSignIn} />;
 };
 
 export default Main;
